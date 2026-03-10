@@ -19,6 +19,20 @@ const logger = winston.createLogger({
 	transports: [new winston.transports.Console()],
 });
 
+// CORS middleware
+app.use((req, res, next) => {
+	logger.info(`CORS request: ${req.method} ${req.url}`);
+
+	res.header('Access-Control-Allow-Origin', 'https://satisfactory-calculator.com');
+	res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+	res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+	if (req.method === 'OPTIONS') {
+		return res.sendStatus(200);
+	}
+
+	next();
+});
+
 app.get('/', (req, res) => {
 	const search = (req.query.search as string)?.toLocaleLowerCase();
 
@@ -26,7 +40,7 @@ app.get('/', (req, res) => {
 	const foundFiles = fs.readdirSync(savePath).filter((file) => file.toLocaleLowerCase().includes(search));
 
 	if (foundFiles.length === 0) {
-		return res.send('No matching files found.');
+		return res.status(404).send('No matching files found.');
 	}
 
 	// Get file stats for each found file and sort by modification time
@@ -45,11 +59,10 @@ app.get('/', (req, res) => {
 	// Set headers to set file name and CORS
 	res.setHeader('Content-Disposition', `attachment; filename="${lastEditedFile}"`);
 	res.setHeader('Access-Control-Allow-Origin', 'https://satisfactory-calculator.com');
-	res.setHeader('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin');
 
 	// Send the last edited file
 	logger.info(`Sending file: ${lastEditedFilePath}`);
-	res.sendFile(path.resolve(lastEditedFilePath));
+	return res.sendFile(path.resolve(lastEditedFilePath));
 });
 
 app.listen(port, () => {
