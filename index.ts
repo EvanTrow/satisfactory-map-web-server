@@ -19,20 +19,6 @@ const logger = winston.createLogger({
 	transports: [new winston.transports.Console()],
 });
 
-// CORS middleware
-app.use((req, res, next) => {
-	logger.info(`CORS request: ${req.method} ${req.url}`);
-
-	res.header('Access-Control-Allow-Origin', 'https://satisfactory-calculator.com');
-	res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-	res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-	if (req.method === 'OPTIONS') {
-		return res.sendStatus(200);
-	}
-
-	next();
-});
-
 app.get('/', (req, res) => {
 	const search = (req.query.search as string)?.toLocaleLowerCase();
 
@@ -55,10 +41,6 @@ app.get('/', (req, res) => {
 	// get the last edited file and its path
 	const lastEditedFile = fileWithStats[0].file;
 	const lastEditedFilePath = path.join(savePath, lastEditedFile);
-
-	// Set headers to set file name and CORS
-	res.setHeader('Content-Disposition', `attachment; filename="${lastEditedFile}"`);
-	res.setHeader('Access-Control-Allow-Origin', 'https://satisfactory-calculator.com');
 
 	// Send the last edited file
 	logger.info(`Sending file: ${lastEditedFilePath}`);
